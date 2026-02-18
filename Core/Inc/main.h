@@ -46,6 +46,7 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
+#define BKPT asm("bkpt 255")
 
 /* USER CODE END EM */
 
@@ -59,6 +60,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define LED_USER_Pin GPIO_PIN_13
 #define LED_USER_GPIO_Port GPIOC
+#define SW_RD_EM_Pin GPIO_PIN_14
+#define SW_RD_EM_GPIO_Port GPIOC
 #define A0_Pin GPIO_PIN_0
 #define A0_GPIO_Port GPIOA
 #define A1_Pin GPIO_PIN_1
