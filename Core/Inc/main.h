@@ -28,6 +28,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
+#include "stm32f1xx_hal_flash.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -36,6 +37,36 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+
+#undef FLASH_ERROR_PG
+#undef FLASH_ERROR_WRP
+typedef enum
+{
+    FLASH_BUSY      = HAL_BUSY,
+    FLASH_ERROR_PG  = HAL_ERROR,
+    FLASH_ERROR_WRP = HAL_ERROR,
+    FLASH_COMPLETE  = HAL_OK,
+    FLASH_TIMEOUT   = HAL_TIMEOUT
+} FLASH_Status;
+
+
+// Flash Control Register bits
+#define CR_PG_Set                ((uint32_t)0x00000001)
+#define CR_PG_Reset              ((uint32_t)0x00001FFE)
+#define CR_PER_Set               ((uint32_t)0x00000002)
+#define CR_PER_Reset             ((uint32_t)0x00001FFD)
+#define CR_MER_Set               ((uint32_t)0x00000004)
+#define CR_MER_Reset             ((uint32_t)0x00001FFB)
+#define CR_OPTPG_Set             ((uint32_t)0x00000010)
+#define CR_OPTPG_Reset           ((uint32_t)0x00001FEF)
+#define CR_OPTER_Set             ((uint32_t)0x00000020)
+#define CR_OPTER_Reset           ((uint32_t)0x00001FDF)
+#define CR_STRT_Set              ((uint32_t)0x00000040)
+#define CR_LOCK_Set              ((uint32_t)0x00000080)
+
+// Delay definition
+#define EraseTimeout          ((uint32_t)0x000B0000)
+#define ProgramTimeout        ((uint32_t)0x00002000)
 
 /* USER CODE END ET */
 

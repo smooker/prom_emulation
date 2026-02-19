@@ -17,10 +17,13 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
+// #include "stm32f1xx_hal.h"
 
 /* USER CODE END Includes */
 
@@ -325,6 +328,41 @@ void fill();
 void read();
 
 
+void FLASH_Unlock()
+{
+    uint16_t Status = HAL_FLASH_Unlock();      //fixme. move the same into ee_init and into ww_writevariable
+    assert_param(Status == HAL_OK);
+    if(Status != HAL_OK) {
+        BKPT;
+    };
+}
+
+////
+static FLASH_Status FLASH_ErasePage(uint32_t Page_Address)
+{
+    FLASH_Status status = FLASH_COMPLETE;
+    /* Check the parameters */
+    assert_param(IS_FLASH_ADDRESS(Page_Address));
+
+    status = (FLASH_Status) FLASH_WaitForLastOperation(EraseTimeout);
+
+    if(status == FLASH_COMPLETE)
+    {
+        /* if the previous operation is completed, proceed to erase the page */
+        FLASH->CR|= CR_PER_Set;
+        FLASH->AR = Page_Address;
+        FLASH->CR|= CR_STRT_Set;
+
+        /* Wait for last operation to be completed */
+        status = (FLASH_Status) FLASH_WaitForLastOperation(EraseTimeout);
+        /* Disable the PER Bit */
+        FLASH->CR &= CR_PER_Reset;
+    }
+    BKPT;
+    return status;
+}
+
+////
 void fill()
 {
     uint8_t addr = 0;
@@ -379,6 +417,8 @@ void readFlash()
     // if (value > 0) {
         // BKPT;
     // }
+    BKPT;
+    FLASH_ErasePage(0x800F000);
 }
 
 /* USER CODE END PFP */
@@ -401,9 +441,13 @@ int main(void)
   /* USER CODE BEGIN 1 */
   HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
 
+  FLASH_Unlock();
+
+  BKPT;
+
   // fill buffer with 0xff
   fill();
-  // BKPT;
+  BKPT;
 
   /* USER CODE END 1 */
 
