@@ -43,8 +43,12 @@
 
 /* USER CODE BEGIN PV */
 
+uint32_t pageStartAddr = 0x0800F000;
 
 uint16_t arr[512];
+
+__attribute__((section(".romdata"))) const uint32_t my_specific_data  = 0x54321;
+const uint32_t my_specific_data2 __attribute__((section(".romdata"))) = 0x54322;
 
 /* USER CODE END PV */
 
@@ -52,6 +56,11 @@ uint16_t arr[512];
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
+void readFlash();
+void fill();
+void read();
+
+
 
 void fill()
 {
@@ -87,6 +96,19 @@ void read()
             break;
         }
     }
+    readFlash();        // fixme
+}
+
+
+void readFlash()
+{
+    //
+    uint16_t value;
+    value = (*(__IO uint16_t*)(pageStartAddr));
+    if (value > 0) {
+        BKPT;
+    }
+    BKPT;
 }
 
 /* USER CODE END PFP */

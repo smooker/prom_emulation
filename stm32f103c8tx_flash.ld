@@ -62,7 +62,8 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 MEMORY
 {
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 20K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 64K
+FLASH (rx)     : ORIGIN = 0x8000000, LENGTH = 60K
+ROM(rx)				 : ORIGIN = 0x800F000, LENGTH = 4K
 }
 
 /* Define output sections */
@@ -101,6 +102,14 @@ SECTIONS
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(4);
   } >FLASH
+  /* smooker */
+  .romdata :
+  {
+    KEEP (*(.romdata*))
+    . = ALIGN(4);
+    *(.romdata)         /* .rodata sections (constants, strings, etc.) */
+    . = ALIGN(4);
+  } >ROM
 
   .ARM.extab   : { *(.ARM.extab* .gnu.linkonce.armextab.*) } >FLASH
   .ARM : {
