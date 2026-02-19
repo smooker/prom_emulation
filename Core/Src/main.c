@@ -43,12 +43,51 @@
 
 /* USER CODE BEGIN PV */
 
+
+uint16_t arr[512];
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
+
+void fill()
+{
+    uint8_t addr = 0;
+    while (1) {
+        arr[addr] = 0xffff;
+        addr++;
+        if (addr == 0) {
+            break;
+        }
+    }
+}
+
+void read()
+{
+    uint8_t addr = 0;
+    uint32_t addr32 =0;
+    while (1) {
+        // send to A0-A7
+        addr32 =  (~(addr & 0x00ff) << 16u) | (addr & 0x00ff);
+        GPIOA->BSRR = addr32;
+
+        // easy
+        HAL_Delay(2);
+
+        //read whole 16 bits into arr
+        arr[addr] = (uint16_t)GPIOB->IDR & 0x0000ffff;
+        // if ( arr[addr] > 0) {
+        //     BKPT;
+        // }
+        addr++;
+        if (addr == 0) {
+            break;
+        }
+    }
+}
 
 /* USER CODE END PFP */
 
@@ -69,6 +108,10 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
   HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
+
+  // fill buffer with 0xff
+  fill();
+  // BKPT;
 
   /* USER CODE END 1 */
 
@@ -100,13 +143,14 @@ int main(void)
   {
     //
     if ( SW_RD_EM_SET ) {
-        BKPT;
+        // BKPT;
         HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
     }
     if ( SW_RD_EM_RESET ) {
-        BKPT;
+        // BKPT;
         HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_SET);
     }
+    read();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -187,7 +231,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : SW_RD_EM_Pin */
   GPIO_InitStruct.Pin = SW_RD_EM_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(SW_RD_EM_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : A0_Pin A1_Pin A2_Pin A3_Pin
@@ -208,7 +252,7 @@ static void MX_GPIO_Init(void)
                           |D15_Pin|D3_Pin|D4_Pin|D5_Pin
                           |D6_Pin|D7_Pin|D8_Pin|D9_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */

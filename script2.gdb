@@ -7,8 +7,8 @@ monitor traceswo
 stop
 
 ##file ./build/modbus.elf 
-load ./build/prom_emulation_stm32.hex 
-set remote exec-file ./build/prom_emulation_stm32.elf
+load ./build/prom_emulation.hex 
+set remote exec-file ./build/prom_emulation.elf
 compare-sections
 #dump binary memory result.bin 0x0801f800 0x0801ffff
 #x/2048x 0x0801f800
