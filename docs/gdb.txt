@@ -37,6 +37,12 @@ set style disassembler immediate foreground yellow
 set style disassembler immediate intensity bold
 
 
+
+
+set auto-load local-gdbinit on
+
+
+
 DASHBOARD
 
 
