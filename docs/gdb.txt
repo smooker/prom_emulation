@@ -1,0 +1,54 @@
+print [Expression]
+print $[Previous value number]
+print {[Type]}[Address]
+print [First element]@[Element count]
+print /[Format] [Expression]
+
+    o - octal
+    x - hexadecimal
+    u - unsigned decimal
+    t - binary
+    f - floating point
+    a - address
+    c - char
+    s - string
+
+		z print leading zeroes
+
+>>> show style
+
+
+bash -c "$(curl -fsSL https://gef.blah.cat/sh)"
+
+https://hugsy.github.io/gef/
+
+
+
+
+>>> set style enabled on
+
+
+set style filename foreground green
+
+set style address intensity bold
+
+set style disassembler immediate background none
+set style disassembler immediate foreground yellow
+set style disassembler immediate intensity bold
+
+
+DASHBOARD
+
+
+
+dashboard -style divider_fill_char_primary '#'
+dashboard -style divider_fill_style_primary '33'
+dashboard -style divider_label_style_on_primary '1;31'
+dashboard source -style height 20
+
+
+>>> dashboard -style ansi False
+
+
+
+

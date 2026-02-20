@@ -49,14 +49,7 @@
 
 uint32_t pageStartAddr = 0x0800F000;        //fixme. da si go vzeme ot linkera
 
-uint16_t arr[512];
-
-// i dvata sintaxisa sa validni
-// __attribute__((section(".romdata"))) const uint32_t my_specific_data  = 0x54321;
-// const uint32_t my_specific_data2 __attribute__((section(".romdata"))) = 0x54322;
-
-
-//LSB from 16 bit first...
+uint16_t arrRam[256];
 
 __attribute__((section(".romdata"))) const uint16_t arrFlash[256] = {
     0x0000,
@@ -370,7 +363,7 @@ void fillRam()
 {
     uint8_t addr = 0;
     while (1) {
-        arr[addr] = 0x55aa;
+        arrRam[addr] = 0x55aa;
         addr++;
         if (addr == 0) {
             break;
@@ -378,7 +371,7 @@ void fillRam()
     }
 }
 
-// Address increment and reads B0-B15 into arr
+// Address increment and reads B0-B15 into arrRam
 void readProm2Ram()
 {
     uint8_t addr = 0;
@@ -392,7 +385,7 @@ void readProm2Ram()
         HAL_Delay(2);
 
         //read whole 16 bits into arr
-        arr[addr] = (uint16_t)GPIOB->IDR & 0x0000ffff;
+        arrRam[addr] = (uint16_t)GPIOB->IDR & 0x0000ffff;
         addr++;
         if (addr == 0) {
             break;
@@ -409,7 +402,7 @@ void readFlash2Ram()
     uint16_t value;
     while(1) {
         value = (*(__IO uint16_t*)(pageStartAddr+2*cnt));
-        arr[cnt] = value;
+        arrRam[cnt] = value;
         cnt++;
         if (cnt == 0) {
             break;
@@ -423,7 +416,7 @@ static FLASH_Status writeRam2Flash()
     FLASH_Status FlashStatus = FLASH_COMPLETE;
     uint32_t Address;
     uint8_t index = 0;
-    uint16_t Data = 0x55AA;
+    uint16_t Data = 0x1234;
 
     while(1) {
         Address = pageStartAddr+(index*2);
@@ -454,7 +447,8 @@ static FLASH_Status writeRam2Flash()
         } else {
             BKPT;   // HAS NOT BEEN ERASED
         }
-        if (index++ == 0) {
+        index++;
+        if (index == 0) {
             break;
         }
     }
