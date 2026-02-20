@@ -823,3 +823,5 @@ Makefile
 ./eeprom2/eeprom.h
 ./eeprom2/profile.c
 ./eeprom2/profile.h
+./Drivers/CMSIS/Include/core_cm3.h
+/usr/arm-none-eabi/include/stdint.h

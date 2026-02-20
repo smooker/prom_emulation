@@ -23,7 +23,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-// #include "stm32f1xx_hal.h"
+#include "stdint.h"
+#include "core_cm3.h"
 
 /* USER CODE END Includes */
 
@@ -323,11 +324,12 @@ __attribute__((section(".romdata"))) const uint16_t arrFlash[256] = {
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
-void readFlash();
-void fill();
-void read();
 
+void readFlash2Ram();
+void fillRam();
+void readProm2Ram();
 
+//
 void FLASH_Unlock()
 {
     uint16_t Status = HAL_FLASH_Unlock();      //fixme. move the same into ee_init and into ww_writevariable
@@ -337,7 +339,7 @@ void FLASH_Unlock()
     };
 }
 
-////
+//
 static FLASH_Status FLASH_ErasePage(uint32_t Page_Address)
 {
     FLASH_Status status = FLASH_COMPLETE;
@@ -357,17 +359,18 @@ static FLASH_Status FLASH_ErasePage(uint32_t Page_Address)
         status = (FLASH_Status) FLASH_WaitForLastOperation(EraseTimeout);
         /* Disable the PER Bit */
         FLASH->CR &= CR_PER_Reset;
+        BKPT; //SUCCESS ERASE
     }
-    BKPT;
+    BKPT;   //COMMON BKPT
     return status;
 }
 
 ////
-void fill()
+void fillRam()
 {
     uint8_t addr = 0;
     while (1) {
-        arr[addr] = 0xffff;
+        arr[addr] = 0x55aa;
         addr++;
         if (addr == 0) {
             break;
@@ -375,7 +378,8 @@ void fill()
     }
 }
 
-void read()
+// Address increment and reads B0-B15 into arr
+void readProm2Ram()
 {
     uint8_t addr = 0;
     uint32_t addr32 =0;
@@ -389,19 +393,16 @@ void read()
 
         //read whole 16 bits into arr
         arr[addr] = (uint16_t)GPIOB->IDR & 0x0000ffff;
-        // if ( arr[addr] > 0) {
-        //     BKPT;
-        // }
         addr++;
         if (addr == 0) {
             break;
         }
     }
-    readFlash();        // fixme
+    // BKPT; // ROM IS IN RAM
 }
 
-// reads from flash to mem
-void readFlash()
+// reads ROM from FLASH to RAM
+void readFlash2Ram()
 {
     //
     uint8_t cnt = 0;
@@ -414,11 +415,50 @@ void readFlash()
             break;
         }
     }
-    // if (value > 0) {
-        // BKPT;
-    // }
-    BKPT;
-    FLASH_ErasePage(0x800F000);
+    BKPT;   // FLASHROM IS IN RAM
+}
+
+static FLASH_Status writeRam2Flash()
+{
+    FLASH_Status FlashStatus = FLASH_COMPLETE;
+    uint32_t Address;
+    uint8_t index = 0;
+    uint16_t Data = 0x55AA;
+
+    while(1) {
+        Address = pageStartAddr+(index*2);
+        if ((*(__IO uint32_t*)Address) == 0xFFFFFFFF)
+        {
+            /* Wait for last operation to be completed */
+            FlashStatus = (FLASH_Status) FLASH_WaitForLastOperation(ProgramTimeout);
+
+            if(FlashStatus == FLASH_COMPLETE)
+            {
+                /* if the previous operation is completed, proceed to program the new data */
+                FLASH->CR |= CR_PG_Set;
+
+                *(__IO uint16_t*)Address = Data;
+                /* Wait for last operation to be completed */
+                FlashStatus = (FLASH_Status) FLASH_WaitForLastOperation(ProgramTimeout);
+
+                /* Disable the PG Bit */
+                FLASH->CR &= CR_PG_Reset;
+            }
+
+            /* If program operation was failed, a Flash error code is returned */
+            if (FlashStatus != FLASH_COMPLETE)
+            {
+                // FLASH_Status FlashStatus2 = FlashStatus;
+                BKPT;   // ERROR WRITING TO FLASH
+            }
+        } else {
+            BKPT;   // HAS NOT BEEN ERASED
+        }
+        if (index++ == 0) {
+            break;
+        }
+    }
+    return FlashStatus;
 }
 
 /* USER CODE END PFP */
@@ -442,12 +482,7 @@ int main(void)
   HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
 
   FLASH_Unlock();
-
-  BKPT;
-
-  // fill buffer with 0xff
-  fill();
-  BKPT;
+  // BKPT;
 
   /* USER CODE END 1 */
 
@@ -471,6 +506,20 @@ int main(void)
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
 
+  //HERE GOES ONE TIME
+
+  fillRam();
+  BKPT;
+
+  // readArrFromProm();
+  // BKPT;
+
+  FLASH_ErasePage(pageStartAddr);
+  BKPT;
+
+  writeRam2Flash();
+  BKPT;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -479,14 +528,11 @@ int main(void)
   {
     //
     if ( SW_RD_EM_SET ) {
-        // BKPT;
         HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
     }
     if ( SW_RD_EM_RESET ) {
-        // BKPT;
         HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_SET);
     }
-    read();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
