@@ -5,12 +5,12 @@ target extended-remote /dev/ttyBmpGdb
 monitor swdp_scan
 attach 1
 monitor traceswo
+stop
 
-##file ./build/modbus.elf 
-
+#file ./build/prom_emulation.elf
 #load ./build/prom_emulation.hex 
 set remote exec-file ./build/prom_emulation.elf
-kill
+stop
 #compare-sections
 
 #dump binary memory result.bin 0x0801f800 0x0801ffff

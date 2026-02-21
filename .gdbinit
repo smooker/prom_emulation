@@ -2401,7 +2401,7 @@ p/xz *(unsigned short*) 0x0800f000@256
 end
 
 define ld
-#file ./build/prom_emulation.elf
+file ./build/prom_emulation.elf
 load ./build/prom_emulation.hex 
 set remote exec-file ./build/prom_emulation.elf
 compare-sections

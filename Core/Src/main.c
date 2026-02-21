@@ -323,13 +323,14 @@ void fillRam();
 void readProm2Ram();
 
 //
-void FLASH_Unlock()
+uint16_t FLASH_Unlock()
 {
     uint16_t Status = HAL_FLASH_Unlock();      //fixme. move the same into ee_init and into ww_writevariable
     assert_param(Status == HAL_OK);
     if(Status != HAL_OK) {
         BKPT;
     };
+    return Status;
 }
 
 //
@@ -414,9 +415,9 @@ void readFlash2Ram()
 static FLASH_Status writeRam2Flash()
 {
     FLASH_Status FlashStatus = FLASH_COMPLETE;
+
     uint32_t Address;
     uint8_t index = 0;
-    uint16_t Data = 0x1234;
 
     while(1) {
         Address = pageStartAddr+(index*2);
@@ -430,7 +431,7 @@ static FLASH_Status writeRam2Flash()
                 /* if the previous operation is completed, proceed to program the new data */
                 FLASH->CR |= CR_PG_Set;
 
-                *(__IO uint16_t*)Address = Data;
+                *(__IO uint16_t*)Address = arrRam[index];
                 /* Wait for last operation to be completed */
                 FlashStatus = (FLASH_Status) FLASH_WaitForLastOperation(ProgramTimeout);
 
@@ -521,12 +522,17 @@ int main(void)
   while (1)
   {
     //
-    if ( SW_RD_EM_SET ) {
-        HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
-    }
-    if ( SW_RD_EM_RESET ) {
-        HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_SET);
-    }
+    // if ( SW_RD_EM_SET ) {
+    //     HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
+    // }
+    // if ( SW_RD_EM_RESET ) {
+    //     HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_SET);
+    // }
+
+    HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
+    HAL_Delay(1);
+    HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_SET);
+    HAL_Delay(1);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
