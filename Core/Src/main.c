@@ -17,7 +17,6 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -353,9 +352,9 @@ static FLASH_Status FLASH_ErasePage(uint32_t Page_Address)
         status = (FLASH_Status) FLASH_WaitForLastOperation(EraseTimeout);
         /* Disable the PER Bit */
         FLASH->CR &= CR_PER_Reset;
-        BKPT; //SUCCESS ERASE
+        // BKPT; //SUCCESS ERASE
     }
-    BKPT;   //COMMON BKPT
+    // BKPT;   //COMMON BKPT
     return status;
 }
 
@@ -504,16 +503,22 @@ int main(void)
   //HERE GOES ONE TIME
 
   fillRam();
-  BKPT;
+  // BKPT;
 
   // readArrFromProm();
   // BKPT;
 
   FLASH_ErasePage(pageStartAddr);
-  BKPT;
+  // BKPT;
 
   writeRam2Flash();
-  BKPT;
+  // BKPT;
+
+  HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
+  HAL_Delay(1);
+  HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_SET);
+  HAL_Delay(500);
+
 
   /* USER CODE END 2 */
 
@@ -530,9 +535,9 @@ int main(void)
     // }
 
     HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
-    HAL_Delay(1);
+    HAL_Delay(0);
     HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_SET);
-    HAL_Delay(1);
+    HAL_Delay(0);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
