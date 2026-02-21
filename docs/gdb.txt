@@ -58,3 +58,12 @@ dashboard source -style height 20
 
 
 
+
+
+info "(gdb)Auto-loading safe path"
+
+
+ backtrace (or bt) 
+
+
+
