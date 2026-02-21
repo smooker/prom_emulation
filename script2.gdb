@@ -1,11 +1,11 @@
 dashboard -style discard_scrollback False
-set mi-async on
-set mem inaccessible-by-default off
-target extended-remote /dev/ttyBmpGdb
-monitor swdp_scan
-attach 1
-monitor traceswo
-#stop
+#set mi-async on
+#set mem inaccessible-by-default off
+#target extended-remote /dev/ttyBmpGdb
+#monitor swdp_scan
+#attach 1
+#monitor traceswo
+stop
 
 #file ./build/prom_emulation.elf
 #load ./build/prom_emulation.hex 

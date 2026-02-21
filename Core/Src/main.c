@@ -43,12 +43,18 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+CRC_HandleTypeDef hcrc;
 
 /* USER CODE BEGIN PV */
 
 uint32_t pageStartAddr = 0x0800F000;        //fixme. da si go vzeme ot linkera
 
 uint16_t arrRam[256];
+uint16_t arrRamOld[256];
+
+uint32_t crcOld = 0;
+uint32_t crcNew = 0;
+uint32_t iteration = 0;
 
 __attribute__((section(".romdata"))) const uint16_t arrFlash[256] = {
     0x0000,
@@ -315,11 +321,18 @@ __attribute__((section(".romdata"))) const uint16_t arrFlash[256] = {
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_CRC_Init(void);
 /* USER CODE BEGIN PFP */
 
 void readFlash2Ram();
 void fillRam();
 void readProm2Ram();
+void emulateProm();
+static void GPIO2Emul(void);
+void copyArrRam2ArrRamOld();
+
+static FLASH_Status writeRam2Flash();
+static FLASH_Status FLASH_ErasePage(uint32_t Page_Address);
 
 //
 uint16_t FLASH_Unlock()
@@ -330,6 +343,21 @@ uint16_t FLASH_Unlock()
         BKPT;
     };
     return Status;
+}
+
+//fixme add flash_lock
+
+void copyArrRam2ArrRamOld()
+{
+    uint8_t index = 0;
+
+    while(1) {
+        arrRamOld[index]  = arrRam[index];
+        index++;
+        if ( index == 0) {
+            break;
+        }
+    }
 }
 
 //
@@ -386,12 +414,21 @@ void readProm2Ram()
 
         //read whole 16 bits into arr
         arrRam[addr] = (uint16_t)GPIOB->IDR & 0x0000ffff;
+        // if ( arrRam[addr] > 0x00 ) {
+        //     BKPT;
+        // }
         addr++;
         if (addr == 0) {
             break;
         }
     }
     // BKPT; // ROM IS IN RAM
+}
+
+// emulate prom
+void emulateProm()
+{
+
 }
 
 // reads ROM from FLASH to RAM
@@ -408,7 +445,7 @@ void readFlash2Ram()
             break;
         }
     }
-    BKPT;   // FLASHROM IS IN RAM
+    // BKPT;   // FLASHROM IS IN RAM
 }
 
 static FLASH_Status writeRam2Flash()
@@ -455,6 +492,11 @@ static FLASH_Status writeRam2Flash()
     return FlashStatus;
 }
 
+uint32_t crcCalcOfarrRam() {
+    uint32_t crc_val = HAL_CRC_Calculate(&hcrc, (uint32_t*)arrRam, 128);
+    return crc_val;
+}
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -475,7 +517,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
   HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
 
-  FLASH_Unlock();
+  // FLASH_Unlock();
   // BKPT;
 
   /* USER CODE END 1 */
@@ -498,27 +540,32 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  __HAL_RCC_CRC_CLK_ENABLE();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
 
-  //HERE GOES ONE TIME
-
-  fillRam();
+  // fillRam();
   // BKPT;
 
   // readArrFromProm();
   // BKPT;
 
-  FLASH_ErasePage(pageStartAddr);
+  // FLASH_ErasePage(pageStartAddr);
   // BKPT;
 
-  writeRam2Flash();
+  // writeRam2Flash();
   // BKPT;
 
   HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
-  HAL_Delay(1);
+  HAL_Delay(1000);
   HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_SET);
-  HAL_Delay(500);
+  HAL_Delay(1000);
+  HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
+  HAL_Delay(1000);
 
+  // GPIO2Emul();
+
+  HAL_GPIO_WritePin(D12_GPIO_Port, D12_Pin, GPIO_PIN_SET);
 
   /* USER CODE END 2 */
 
@@ -534,10 +581,29 @@ int main(void)
     //     HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_SET);
     // }
 
+    // // send to D0-D15
+    // uint16_t data = 0xffff;
+    // uint32_t data32 =  (~(data & 0xffff) << 16u) | (data & 0xffff);
+    // GPIOB->BSRR = data32;
+    // HAL_Delay(0);
+    // data = 0x0000;
+    // data32 =  (~(data & 0xffff) << 16u) | (data & 0xffff);
+    // GPIOB->BSRR = data32;
+    // HAL_Delay(0);
+
     HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
     HAL_Delay(0);
     HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_SET);
     HAL_Delay(0);
+
+    readProm2Ram();
+    crcNew = crcCalcOfarrRam();
+    if ( (crcOld != 0x0) & (crcOld != crcNew) ) {
+            BKPT;
+    }
+    copyArrRam2ArrRamOld();
+    crcOld = crcNew;
+    iteration++;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -582,6 +648,32 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief CRC Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_CRC_Init(void)
+{
+
+  /* USER CODE BEGIN CRC_Init 0 */
+
+  /* USER CODE END CRC_Init 0 */
+
+  /* USER CODE BEGIN CRC_Init 1 */
+
+  /* USER CODE END CRC_Init 1 */
+  hcrc.Instance = CRC;
+  if (HAL_CRC_Init(&hcrc) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CRC_Init 2 */
+
+  /* USER CODE END CRC_Init 2 */
+
 }
 
 /**
@@ -649,11 +741,9 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 
-static void MX_GPIO_InitEmul(void)
+static void GPIO2Emul(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  /* USER CODE BEGIN MX_GPIO_Init_1 */
-  /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -664,9 +754,8 @@ static void MX_GPIO_InitEmul(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_USER_GPIO_Port, LED_USER_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, A0_Pin|A1_Pin|A2_Pin|A3_Pin
-                               |A4_Pin|A5_Pin|A6_Pin|A7_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, D0_Pin|D1_Pin|D2_Pin|D3_Pin|D4_Pin|D5_Pin|D6_Pin|D7_Pin
+                               |D8_Pin|D9_Pin|D10_Pin|D11_Pin|D12_Pin|D13_Pin|D14_Pin|D15_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : LED_USER_Pin */
   GPIO_InitStruct.Pin = LED_USER_Pin;
@@ -675,13 +764,19 @@ static void MX_GPIO_InitEmul(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_USER_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : SW_RD_EM_Pin */
+  GPIO_InitStruct.Pin = SW_RD_EM_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(SW_RD_EM_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : A0_Pin A1_Pin A2_Pin A3_Pin
                            A4_Pin A5_Pin A6_Pin A7_Pin */
   GPIO_InitStruct.Pin = A0_Pin|A1_Pin|A2_Pin|A3_Pin
                         |A4_Pin|A5_Pin|A6_Pin|A7_Pin;
+
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : D0_Pin D1_Pin D2_Pin D10_Pin
@@ -692,12 +787,11 @@ static void MX_GPIO_InitEmul(void)
                         |D11_Pin|D12_Pin|D13_Pin|D14_Pin
                         |D15_Pin|D3_Pin|D4_Pin|D5_Pin
                         |D6_Pin|D7_Pin|D8_Pin|D9_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /* USER CODE BEGIN MX_GPIO_Init_2 */
-  /* USER CODE END MX_GPIO_Init_2 */
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
 /* USER CODE END 4 */

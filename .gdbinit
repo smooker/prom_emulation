@@ -2407,4 +2407,18 @@ set remote exec-file ./build/prom_emulation.elf
 compare-sections
 end
 
+define ag
+dashboard -style discard_scrollback False
+set mi-async on
+set mem inaccessible-by-default off
+target extended-remote /dev/ttyBmpGdb
+monitor swdp_scan
+attach 1
+monitor traceswo
+end
+
+define pcrc
+p/xz crcOld
+p/xz crcNew
+end
 set auto-load safe-path .
