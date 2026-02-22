@@ -50,7 +50,7 @@ CRC_HandleTypeDef hcrc;
 uint32_t pageStartAddr = 0x0800F000;        //fixme. da si go vzeme ot linkera
 
 uint16_t arrRam[256];
-uint16_t arrRamOld[256];
+uint16_t arrRamOld[256];            //just for debug. fixme later
 
 uint32_t crcOld = 0;
 uint32_t crcNew = 0;
@@ -410,7 +410,7 @@ void readProm2Ram()
         GPIOA->BSRR = addr32;
 
         // easy
-        HAL_Delay(2);
+        // HAL_Delay(0);            //fixme
 
         //read whole 16 bits into arr
         arrRam[addr] = (uint16_t)GPIOB->IDR & 0x0000ffff;
