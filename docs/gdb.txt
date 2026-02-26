@@ -67,3 +67,11 @@ info "(gdb)Auto-loading safe path"
 
 
 
+
+p/x GPIOA->IDR & 0x000000ff
+
+
+set arrRam[0xd3] = 0xd3a8
+
+p foo()    #executes function directly from GDB! ?!?!
+

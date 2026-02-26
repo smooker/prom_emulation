@@ -203,10 +203,13 @@ void emulateProm()
 
         uint8_t addr = (uint16_t)GPIOA->IDR & 0x000000ff;
 
-        data16 = arrFlash[addr];
+        // data16 = arrFlash[addr];
+        data16 = arrRam[addr];
 
         data32 =  (~(data16 & 0xffff) << 16u) | (data16 & 0xffff);
         GPIOB->BSRR = data32;
+
+        // BKPT;
     }
 }
 
@@ -346,6 +349,7 @@ int main(void)
   if ( SW_RD_EM_SET ) {
         // here goes emulation
         GPIO2Emul();
+        readFlash2Ram();
         emulateProm();
   }
 
