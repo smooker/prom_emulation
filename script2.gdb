@@ -1,5 +1,6 @@
 dashboard -style discard_scrollback False
 #set mi-async on
+#set non-stop on
 #set mem inaccessible-by-default off
 #target extended-remote /dev/ttyBmpGdb
 #monitor swdp_scan
